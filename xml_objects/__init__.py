@@ -87,7 +87,10 @@ class Builder:
         if isgenerator(ret):
             try:
                 next(ret)
-                raise RuntimeError('Iterators can only yield once.')
+                raise RuntimeError(
+                    'Iterators can only yield once.\nOffending parser: %r' %
+                    parser
+                )
             except StopIteration:
                 pass  # Good stuff.
         return obj

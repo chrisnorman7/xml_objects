@@ -55,3 +55,37 @@ def test_parsers(b):
     res = b.from_string(code)
     assert isinstance(res, RootObject)
     assert res.strings == strings
+
+
+def test_valid_generator(b):
+
+    class PlaceHolder:
+        def __init__(self):
+            self.value = 1
+
+    @b.parser('first')
+    def do_first(parent, text):
+        ph = PlaceHolder()
+        yield ph
+        assert ph.value == 2
+        ph.value += 1
+
+    @b.parser('second')
+    def do_second(parent, text):
+        assert parent.value == 1  # Should be, it's just been created.
+        parent.value += 1
+
+    ph = b.from_string('<first><second></second></first>')
+    assert isinstance(ph, PlaceHolder)
+    assert ph.value == 3
+
+
+def test_invalid_generator(b):
+    @b.parser('fails')
+    def failure(parent, text):
+        yield 1
+        yield 2
+        yield 3
+
+    with raises(RuntimeError):
+        b.from_string('<fails></fails>')
