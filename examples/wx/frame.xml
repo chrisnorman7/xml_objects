@@ -1,0 +1,12 @@
+<frame title="xml_objects wxPython Demo">
+    <sizer>
+        <sizer orient="horizontal">
+            <label>Username</label>
+            <input>pretendusername</input>
+        </sizer>
+        <sizer orient="horizontal">
+            <label>Password</label>
+            <input style="te_password"></input>
+        </sizer>
+    </sizer>
+</frame>

@@ -1,5 +1,7 @@
 """Provides the WorldBuilder class."""
 
+import sys
+
 from xml.etree.ElementTree import fromstring
 
 
@@ -41,6 +43,14 @@ class Builder:
             self.parsers[name] = func
             return func
         return inner
+
+    def from_args(self, default):
+        """Passes either sys.argv[1], or default to self.from_filename."""
+        try:
+            default = sys.argv[1]
+        except IndexError:
+            pass  # default will simply stay the same.
+        return self.from_filename(default)
 
     def from_filename(self, filename):
         """Opens the given filename, and passes the file object onto
