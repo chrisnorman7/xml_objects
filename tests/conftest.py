@@ -1,6 +1,6 @@
 from pytest import fixture
 
-from xml_objects import Builder
+from xml_python import Builder
 
 
 @fixture(name='b')

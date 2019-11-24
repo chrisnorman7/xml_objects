@@ -1,6 +1,6 @@
 import wx
 
-from xml_objects.ext.wx import builder
+from xml_python.ext.wx import builder
 
 if __name__ == '__main__':
     a = wx.App()

@@ -1,6 +1,6 @@
 from pytest import raises
 
-from xml_objects import Builder, NoSuchParser, no_parent
+from xml_python import Builder, NoSuchParser, no_parent
 
 xml = """<root>
 <first>%s</first>
