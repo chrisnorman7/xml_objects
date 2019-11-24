@@ -2,7 +2,16 @@
 
 from xml.etree.ElementTree import fromstring
 
-no_parent = 'Top-level node'
+
+class NoParent:
+    def __str__(self):
+        return 'Top-level node'
+
+    def __repr__(self):
+        return str(self)
+
+
+no_parent = NoParent()
 
 
 class NoSuchParser(Exception):
