@@ -41,7 +41,9 @@ def get_sizer(parent, text, orient='vertical'):
         raise AssertionError(
             'Parent must be a frame or a sizer. Got: %r' % parent
         )
-    return s
+    yield s
+    if isinstance(parent, wx.Frame):
+        parent.panel.SetSizerAndFit(s)
 
 
 @builder.parser('input')

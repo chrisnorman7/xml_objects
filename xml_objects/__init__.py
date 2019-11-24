@@ -2,6 +2,7 @@
 
 import sys
 
+from inspect import isgenerator
 from xml.etree.ElementTree import fromstring
 
 
@@ -75,8 +76,18 @@ class Builder:
         text = node.text
         if name not in self.parsers:
             raise NoSuchParser(name)
-        cls = self.parsers[name]
-        obj = cls(parent, text, **node.attrib)
+        parser = self.parsers[name]
+        ret = parser(parent, text, **node.attrib)
+        if isgenerator(ret):
+            obj = next(ret)
+        else:
+            obj = ret
         for child in node:
             self.build(child, obj)
+        if isgenerator(ret):
+            try:
+                next(ret)
+                raise RuntimeError('Iterators can only yield once.')
+            except StopIteration:
+                pass  # Good stuff.
         return obj
