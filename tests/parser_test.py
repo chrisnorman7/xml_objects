@@ -89,3 +89,13 @@ def test_invalid_generator(b):
 
     with raises(RuntimeError):
         b.from_string('<fails></fails>')
+
+
+def test_convert_attribute_names(b):
+
+    @b.parser('test')
+    def do_test(parent, text, file_number=None):
+        return file_number
+
+    n = b.from_string('<test file-number="1"></test>')
+    assert n == '1'

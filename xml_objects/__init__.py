@@ -77,7 +77,11 @@ class Builder:
         if name not in self.parsers:
             raise NoSuchParser(name)
         parser = self.parsers[name]
-        ret = parser(parent, text, **node.attrib)
+        kwargs = {
+            name.replace('-', '_'): value for name, value in
+            node.attrib.items()
+        }
+        ret = parser(parent, text, **kwargs)
         if isgenerator(ret):
             obj = next(ret)
         else:
