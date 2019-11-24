@@ -75,3 +75,17 @@ def get_app(parent, text, name=__name__, host='0.0.0.0', port='4000'):
 While you could use xml_objects to build GUIs with [wxPython](https://wxpython.org/) for example, xml_objects itself doesn't provide any mechanism to store state, so this must be done by the programmer.
 
 For examples, see `xml_objects/ext/wx.py`.
+
+### Iterators
+Sometimes it may be desirable to run code after you have created an object, and all child tags have been processed. For this reason, it is possible to use generators in your parsers:
+
+```
+@builder.parser('frame')
+def get_frame(parent, text):
+    """Create a frame, then finalise it when everyone else has finished with it."""
+    f = Frame()
+    yield f
+    f.finalise()
+```
+
+If you yield more than once, RuntimeError will be raised.
