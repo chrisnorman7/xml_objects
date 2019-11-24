@@ -1,0 +1,26 @@
+<app name="flask-world-builder" host="0.0.0.0" port="8000">
+<route path="/">
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Flask Test&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;World Builder&lt;/h1&gt;
+&lt;p&gt;This flask app is built entirely with XML.&lt;/p&gt;
+&lt;p&gt;Now visit &lt;a href="/next/"&gt;the next&lt;/a&gt; page.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</route>
+<route path="/next/">
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Next Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;World Builder&lt;/h1&gt;
+&lt;p&gt;This next page is also built entirely with XML.&lt;/p&gt;
+&lt;p&gt;Go back to &lt;a href="/"&gt;the home&lt;/a&gt; page.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</route>
+</app>
