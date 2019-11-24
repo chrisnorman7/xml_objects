@@ -28,7 +28,7 @@ def get_frame(parent, text, title='Untitled Frame'):
 
 
 @builder.parser('sizer')
-def get_sizer(parent, text, orient='vertical'):
+def get_sizer(parent, text, proportion='1', orient='vertical'):
     """Get a sizer to add controls to."""
     orient = orient.upper()
     o = getattr(wx, orient)
@@ -44,10 +44,14 @@ def get_sizer(parent, text, orient='vertical'):
     yield s
     if isinstance(parent, wx.Frame):
         parent.panel.SetSizerAndFit(s)
+    else:
+        parent.Add(s, int(proportion), wx.GROW)
 
 
 @builder.parser('input')
-def get_control(parent, text, name=None, type=None, style=None, label=None):
+def get_control(
+    parent, text, proportion=1, name=None, type=None, style=None, label=None
+):
     """Get a button."""
     p, s = get_panel_sizer(parent)
     types = {
@@ -78,16 +82,18 @@ def get_control(parent, text, name=None, type=None, style=None, label=None):
         text = text.strip()
         if text:
             c.SetValue(text)
-    s.Add(c, 1, wx.GROW)
+    s.Add(c, int(proportion), wx.GROW)
     return c
 
 
 @builder.parser('label')
-def get_label(parent, text):
+def get_label(
+    parent, text, proportion='0'
+):
     """Create a label."""
     p, s = get_panel_sizer(parent)
     label = wx.StaticText(p, label=text.strip())
-    s.Add(label, 0, wx.GROW)
+    s.Add(label, int(proportion), wx.GROW)
     return label
 
 
