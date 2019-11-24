@@ -2,11 +2,47 @@
     <sizer>
         <sizer orient="horizontal">
             <label>Username</label>
-            <input>pretendusername</input>
+            <input name="username" style="te_process_enter">pretendusername<event type="text_enter">
+def event(event):
+    control = event.GetEventObject()
+    frame = control.GetGrandParent()
+    frame.password.SetFocus()
+            </event></input>
         </sizer>
         <sizer orient="horizontal">
             <label>Password</label>
-            <input style="te_password"></input>
+            <input name="password" style="te_process_enter te_password">
+                <event type="text_enter">
+import wx
+
+
+def event(event):
+    """Click the login button."""
+    control = event.GetEventObject()
+    frame = control.GetGrandParent()
+    frame.login()
+                </event>
+            </input>
+        </sizer>
+        <sizer orient="horizontal">
+            <input type="button" name="ok" label="OK">
+                <event type="button">
+def event(event):
+    """Pretend to login."""
+    button = event.GetEventObject()
+    frame = button.GetGrandParent()
+    frame.login()
+                </event>
+            </input>
+            <input type="button" label="Cancel">
+                <event type="button">
+def event(event):
+    """Close the window when the cancel button is pressed."""
+    button = event.GetEventObject()
+    frame = button.GetGrandParent()
+    frame.Close(True)
+                </event>
+            </input>
         </sizer>
     </sizer>
 </frame>

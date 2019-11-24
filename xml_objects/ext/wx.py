@@ -1,5 +1,6 @@
 import wx
 
+from text2code import text2code as t2c
 from xml_objects import Builder, no_parent
 
 builder = Builder()
@@ -44,7 +45,7 @@ def get_sizer(parent, text, orient='vertical'):
 
 
 @builder.parser('input')
-def get_control(parent, text, type=None, style=None, label=None):
+def get_control(parent, text, name=None, type=None, style=None, label=None):
     """Get a button."""
     p, s = get_panel_sizer(parent)
     types = {
@@ -68,11 +69,13 @@ def get_control(parent, text, type=None, style=None, label=None):
             style_value = getattr(wx, style_name.upper())
             style_int |= style_value
         kwargs['style'] = style_int
-    print(kwargs)
     c = cls(p, **kwargs)
+    if name is not None:
+        setattr(p.GetParent(), name, c)
     if text is not None:
         text = text.strip()
-        c.SetValue(text)
+        if text:
+            c.SetValue(text)
     s.Add(c, 1, wx.GROW)
     return c
 
@@ -84,3 +87,19 @@ def get_label(parent, text):
     label = wx.StaticText(p, label=text.strip())
     s.Add(label, 0, wx.GROW)
     return label
+
+
+@builder.parser('event')
+def create_event(parent, text, type=None):
+    """Create an event using text2code."""
+    if type is None:
+        raise RuntimeError('You must provide a type.')
+    event_name = 'evt_' + type
+    event_name = event_name.upper()
+    event_type = getattr(wx, event_name)
+    stuff = t2c(text, __name__)
+    if 'event' not in stuff:
+        raise RuntimeError('No function named "event" found in %r.' % stuff)
+    f = stuff['event']
+    parent.Bind(event_type, f)
+    return parent  # Don't want anything untoward happening.
