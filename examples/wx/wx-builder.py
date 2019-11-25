@@ -1,8 +1,9 @@
 import wx
 
-from xml_python.ext.wx import builder
+from xml_python.ext.wx import WXBuilder
 
 if __name__ == '__main__':
+    builder = WXBuilder()
     a = wx.App()
     f = builder.from_args('frame.xml')
 

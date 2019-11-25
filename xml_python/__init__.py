@@ -1,4 +1,5 @@
-"""Provides the WorldBuilder class."""
+"""Provides the WorldBuilder class, as well as the subclass and parser
+decorators."""
 
 import sys
 
@@ -28,6 +29,10 @@ class Builder:
     def __init__(self):
         """Set some defaults."""
         self.parsers = {}
+        for name in dir(self):
+            func = getattr(self, name)
+            if hasattr(func, '__parser_args__'):
+                self.parser(*func.__parser_args__)(func)
 
     def parser(self, name):
         """Decorate a function to use as a parser.
@@ -98,3 +103,14 @@ class Builder:
             except StopIteration:
                 pass  # Good stuff.
         return obj
+
+
+def parser(*args):
+    """Decorate an instance method to have it automatically added as a parser.
+    Takes the same arguments as the Builder.parser method."""
+
+    def inner(func):
+        func.__parser_args__ = args
+        return func
+
+    return inner
