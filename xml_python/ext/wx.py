@@ -88,12 +88,14 @@ def get_control(
 
 @builder.parser('label')
 def get_label(
-    parent, text, proportion='0'
+    parent, text, name=None, proportion='0'
 ):
     """Create a label."""
     p, s = get_panel_sizer(parent)
     label = wx.StaticText(p, label=text.strip())
     s.Add(label, int(proportion), wx.GROW)
+    if name is not None:
+        setattr(p.GetParent(), name, label)
     return label
 
 
