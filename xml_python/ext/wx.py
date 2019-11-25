@@ -22,7 +22,8 @@ class WXBuilder(Builder):
     @parser('frame')
     def get_frame(self, parent, text, title='Untitled Frame'):
         """Return a wx.Frame instance."""
-        assert parent is no_parent
+        if parent is not no_parent:
+            raise RuntimeError('This tag must be at the top of the tree.')
         f = wx.Frame(None, name='', title=title)
         f.panel = wx.Panel(f)
         return f
@@ -39,7 +40,7 @@ class WXBuilder(Builder):
         elif isinstance(parent, wx.BoxSizer):
             f = parent.frame
         else:
-            raise AssertionError(
+            raise RuntimeError(
                 'Parent must be a frame or a sizer. Got: %r' % parent
             )
         s = wx.BoxSizer(o)
@@ -165,6 +166,13 @@ class WXBuilder(Builder):
         id = getattr(wx, id)
         i = parent.Append(id, text, help)
         return i
+
+    @parser('menuseparator')
+    def get_menu_separator(self, parent, text):
+        """Add a menu separator to a menu."""
+        if not isinstance(parent, wx.Menu):
+            raise RuntimeError('This tag must be a child of menu.')
+        return parent.AppendSeparator()
 
     @parser('menuaction')
     def get_menu_action(self, parent, text):
