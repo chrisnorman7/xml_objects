@@ -62,3 +62,16 @@ def test_load():
     assert username_sizer.GetSizer() is f.username_sizer
     assert password_sizer.GetSizer() is f.password_sizer
     assert button_sizer.GetSizer() is f.button_sizer
+    mb = f.GetMenuBar()
+    assert isinstance(mb, wx.MenuBar)
+    assert mb.GetMenuCount() == 1
+    fm = mb.GetMenu(0)
+    assert isinstance(fm, wx.Menu)
+    assert fm is f.file_menu
+    assert mb.GetMenuLabel(0) == fm.GetTitle()
+    assert fm.GetTitle() == 'File'
+    items = fm.GetMenuItems()
+    assert len(items) == 1
+    item = items[0]
+    assert item.GetItemLabel() == 'Quit\tCTRL+Q'
+    assert item.GetId() == wx.ID_EXIT

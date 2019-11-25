@@ -45,4 +45,9 @@ def event(event):
             </input>
         </sizer>
     </sizer>
+    <menubar>
+        <menu name="file_menu" title="File">
+            <menuitem id="exit" hotkey="CTRL+Q" help="Quit the program">Quit</menuitem>
+        </menu>
+    </menubar>
 </frame>

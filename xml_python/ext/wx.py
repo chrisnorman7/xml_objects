@@ -113,6 +113,59 @@ class WXBuilder(Builder):
         parent.Bind(event_type, f)
         return parent  # Don't want anything untoward happening.
 
+    @parser('menubar')
+    def get_menubar(self, parent, text):
+        """Create a menubar."""
+        if not isinstance(parent, wx.Frame):
+            raise RuntimeError(
+                'This tag must be a child node of the frame tag.'
+            )
+        elif parent.GetMenuBar() is not None:
+            raise RuntimeError('That frame already has a menubar.')
+        mb = wx.MenuBar()
+        parent.SetMenuBar(mb)
+        return mb
+
+    @parser('menu')
+    def get_menu(self, parent, text, title=None, name=None):
+        """Add a menu to the main menubar, or a submenu to an existing menu."""
+        if isinstance(parent, wx.MenuBar):
+            f = parent.GetTopLevelParent()
+        elif isinstance(parent, wx.Menu):
+            f = parent.GetWindow()
+        else:
+            raise RuntimeError('This tag must be a child of menubar, or menu.')
+        if title is None:
+            raise RuntimeError('Menus must have a title.')
+        m = wx.Menu(title)
+        if name is not None:
+            setattr(f, name, m)
+        yield m
+        if isinstance(parent, wx.MenuBar):
+            parent.Append(m, title)
+        else:
+            parent.AppendSubMenu(m, title)
+
+    @parser('menuitem')
+    def get_menuitem(
+        self, parent, text, name=None, id='any', hotkey=None, help=''
+    ):
+        """Adds a menu item to a menu. Must be a child tag of menu."""
+        if not isinstance(parent, wx.Menu):
+            raise RuntimeError('Must be a child tag of menu.')
+        if text is None:
+            raise RuntimeError(
+                'This tag must contain text to be used  as the title for the '
+                'menu item.'
+            )
+        text = text.strip()
+        if hotkey is not None:
+            text += f'\t{hotkey}'
+        id = f'ID_{id.upper()}'
+        id = getattr(wx, id)
+        i = parent.Append(id, text, help)
+        return i
+
     def get_panel_sizer(self, parent):
         """Returns a tuple containing (panel, sizer), or raises
         AssertionError."""
