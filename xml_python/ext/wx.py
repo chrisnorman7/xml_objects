@@ -3,7 +3,24 @@ from text2code import text2code as t2c
 
 from .. import Builder, no_parent
 
-builder = Builder()
+
+class _Builder(Builder):
+    """Add a types attribute."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.types = {
+            None: wx.TextCtrl,
+            'text': wx.TextCtrl,
+            'checkbox': wx.CheckBox,
+            'button': wx.Button
+        }
+        self.event_globals = {
+            'builder': self
+        }
+
+
+builder = _Builder()
 
 
 def get_panel_sizer(parent):
@@ -54,18 +71,12 @@ def get_control(
 ):
     """Get a button."""
     p, s = get_panel_sizer(parent)
-    types = {
-        None: wx.TextCtrl,
-        'text': wx.TextCtrl,
-        'checkbox': wx.CheckBox,
-        'button': wx.Button
-    }
-    if type not in types:
-        valid_types = ', '.join(types.keys())
+    if type not in builder.types:
+        valid_types = ', '.join(builder.types.keys())
         raise RuntimeError(
             'Invalid type: %r.\nValid types: %s' % (type, valid_types)
         )
-    cls = types[type]
+    cls = builder.types[type]
     kwargs = {'name': ''}
     if label is not None:
         kwargs['label'] = label
@@ -107,7 +118,7 @@ def create_event(parent, text, type=None):
     event_name = 'evt_' + type
     event_name = event_name.upper()
     event_type = getattr(wx, event_name)
-    stuff = t2c(text, __name__)
+    stuff = t2c(text, __name__, **builder.event_globals)
     if 'event' not in stuff:
         raise RuntimeError('No function named "event" found in %r.' % stuff)
     f = stuff['event']
