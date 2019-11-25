@@ -2,6 +2,7 @@ import os.path
 
 import wx
 
+from pytest import raises
 from xml_python.ext.wx import WXBuilder
 
 
@@ -15,8 +16,6 @@ def test_init():
 
 
 def test_load():
-    a = wx.App()
-    assert isinstance(a, wx.App)  # Just to shut flake8 up.
     b = WXBuilder()
     f = b.from_filename(os.path.join('examples', 'wx', 'frame.xml'))
     assert isinstance(f, wx.Frame)
@@ -75,3 +74,19 @@ def test_load():
     item = items[0]
     assert item.GetItemLabel() == 'Quit\tCTRL+Q'
     assert item.GetId() == wx.ID_EXIT
+
+
+def test_valid_frame(wxb):
+    xml = '<frame></frame>'
+    f = wxb.from_string(xml)
+    children = f.GetChildren()
+    assert len(children) == 1
+    assert isinstance(children[0], wx.Panel)
+    assert children[0] is f.panel
+    assert f.GetTitle() == 'Untitled Frame'
+
+
+def test_invalid_frame(wxb):
+    xml = '<frame><frame></frame></frame>'
+    with raises(RuntimeError):
+        wxb.from_string(xml)
