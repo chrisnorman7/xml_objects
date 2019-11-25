@@ -26,6 +26,8 @@ class WXBuilder(Builder):
             raise RuntimeError('This tag must be at the top of the tree.')
         f = wx.Frame(None, name='', title=title)
         f.panel = wx.Panel(f)
+        self.event_globals['panel'] = f.panel
+        self.event_globals['frame'] = f
         return f
 
     @parser('sizer')

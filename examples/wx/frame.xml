@@ -4,8 +4,6 @@
             <label name="username_label">Username</label>
             <input name="username" style="te_process_enter">pretendusername<event type="text_enter">
 def event(event):
-    control = event.GetEventObject()
-    frame = control.GetGrandParent()
     frame.password.SetFocus()
             </event></input>
         </sizer>
@@ -18,8 +16,6 @@ import wx
 
 def event(event):
     """Click the login button."""
-    control = event.GetEventObject()
-    frame = control.GetGrandParent()
     frame.login()
                 </event>
             </input>
@@ -29,8 +25,6 @@ def event(event):
                 <event type="button">
 def event(event):
     """Pretend to login."""
-    button = event.GetEventObject()
-    frame = button.GetGrandParent()
     frame.login()
                 </event>
             </input>
@@ -38,8 +32,6 @@ def event(event):
                 <event type="button">
 def event(event):
     """Close the window when the cancel button is pressed."""
-    button = event.GetEventObject()
-    frame = button.GetGrandParent()
     frame.Close(True)
                 </event>
             </input>
@@ -50,8 +42,7 @@ def event(event):
             <menuitem id="exit" hotkey="CTRL+Q" help="Quit the program">Quit<menuaction>
 def action(event):
     """Quit the program."""
-    f = event.GetEventObject().GetWindow()
-    f.Close(True)
+    frame.Close(True)
             </menuaction></menuitem>
         </menu>
     </menubar>
