@@ -47,7 +47,12 @@ def event(event):
     </sizer>
     <menubar>
         <menu name="file_menu" title="File">
-            <menuitem id="exit" hotkey="CTRL+Q" help="Quit the program">Quit</menuitem>
+            <menuitem id="exit" hotkey="CTRL+Q" help="Quit the program">Quit<menuaction>
+def action(event):
+    """Quit the program."""
+    f = event.GetEventObject().GetWindow()
+    f.Close(True)
+            </menuaction></menuitem>
         </menu>
     </menubar>
 </frame>

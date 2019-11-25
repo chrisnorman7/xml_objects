@@ -140,11 +140,11 @@ class WXBuilder(Builder):
         m = wx.Menu(title)
         if name is not None:
             setattr(f, name, m)
-        yield m
         if isinstance(parent, wx.MenuBar):
             parent.Append(m, title)
         else:
             parent.AppendSubMenu(m, title)
+        return m
 
     @parser('menuitem')
     def get_menuitem(
@@ -165,6 +165,21 @@ class WXBuilder(Builder):
         id = getattr(wx, id)
         i = parent.Append(id, text, help)
         return i
+
+    @parser('menuaction')
+    def get_menu_action(self, parent, text):
+        """Perform an action when parent is clicked."""
+        if not isinstance(parent, wx.MenuItem):
+            raise RuntimeError(
+                'This tag must be used as a child tag of menuitem.'
+            )
+        d = t2c(text, __name__, **self.event_globals)
+        if 'action' not in d:
+            raise RuntimeError(
+                'No function named "action" could be found in %r.' % d
+            )
+        f = parent.GetMenu().GetWindow()
+        f.Bind(wx.EVT_MENU, d['action'], parent)
 
     def get_panel_sizer(self, parent):
         """Returns a tuple containing (panel, sizer), or raises
