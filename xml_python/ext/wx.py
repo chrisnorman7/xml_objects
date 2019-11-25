@@ -1,7 +1,7 @@
 import wx
-
 from text2code import text2code as t2c
-from xml_objects import Builder, no_parent
+
+from .. import Builder, no_parent
 
 builder = Builder()
 
