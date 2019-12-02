@@ -1,19 +1,28 @@
 import wx
 from text2code import text2code as t2c
 
+from wx.lib.agw.floatspin import FloatSpin
+from wx.lib.intctrl import IntCtrl
+
 from .. import Builder, no_parent, parser
 
 
 class WXBuilder(Builder):
-    """Add a types attribute."""
+    """Add input_types and input_convertions attributes."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.types = {
+        self.input_types = {
             None: wx.TextCtrl,
             'text': wx.TextCtrl,
             'checkbox': wx.CheckBox,
-            'button': wx.Button
+            'button': wx.Button,
+            'int': IntCtrl,
+            'float': FloatSpin
+        }
+        self.input_convertions = {
+            'int': int,
+            'float': float
         }
         self.event_globals = {
             'builder': self
@@ -62,12 +71,12 @@ class WXBuilder(Builder):
     ):
         """Get a button."""
         p, s = self.get_panel_sizer(parent)
-        if type not in self.types:
-            valid_types = ', '.join(self.types.keys())
+        if type not in self.input_types:
+            valid_types = ', '.join(str(t) for t in self.input_types.keys())
             raise RuntimeError(
                 'Invalid type: %r.\nValid types: %s' % (type, valid_types)
             )
-        cls = self.types[type]
+        cls = self.input_types[type]
         kwargs = {'name': ''}
         if label is not None:
             kwargs['label'] = label
@@ -83,6 +92,8 @@ class WXBuilder(Builder):
         if text is not None:
             text = text.strip()
             if text:
+                if type in self.input_convertions:
+                    text = self.input_convertions[type](text)
                 c.SetValue(text)
         s.Add(c, int(proportion), wx.GROW)
         return c
