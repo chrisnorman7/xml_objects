@@ -32,6 +32,10 @@ class InvalidParent(XMLPythonException):
     """An invalid parent was provided."""
 
 
+class InvalidValidParent(XMLPythonException):
+    """The valid_parent argument is invalid."""
+
+
 @attrs
 class Parser:
     """A parser which contains a function and any valid parent."""
@@ -41,13 +45,13 @@ class Parser:
 
     def __call__(self, parent, text, **kwargs):
         """Call self.func if parent is valid."""
-        if (
-            isclass(self.valid_parent) and isinstance(
-                parent, self.valid_parent
-            )
-        ) or (
-            callable(self.valid_parent) and self.valid_parent(parent)
-        ) or self.valid_parent is None:
+        if isclass(self.valid_parent):
+            vp = isinstance(parent, self.valid_parent)
+        elif callable(self.valid_parent):
+            vp = self.valid_parent(parent)
+        else:
+            vp = True
+        if vp:
             return self.func(parent, text, **kwargs)
         raise InvalidParent(parent)
 
@@ -81,10 +85,16 @@ class Builder:
         If valid_parent is a class, then it is checked that the parent is an
         instance of that class. If valid_parent is a function, then that
         function will be called to determine if the parent is valid."""
+
         def inner(func):
             self.parsers[name] = Parser(valid_parent, func)
             return func
-        return inner
+
+        if valid_parent is None or isclass(valid_parent) or callable(
+            valid_parent
+        ):
+            return inner
+        raise InvalidValidParent(valid_parent)
 
     def from_args(self, default):
         """Passes either sys.argv[1], or default to self.from_filename."""

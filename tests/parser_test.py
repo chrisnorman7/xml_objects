@@ -1,6 +1,9 @@
 from pytest import raises
 
-from xml_python import Builder, NoSuchParser, no_parent, Parser
+from xml_python import (
+    Builder, NoSuchParser, NoParent, no_parent, Parser, InvalidParent,
+    InvalidValidParent
+)
 
 xml = """<root>
 <first>%s</first>
@@ -109,3 +112,26 @@ def test_convert_attribute_names(b):
 
     n = b.from_string('<test file-number="1"></test>')
     assert n == '1'
+
+
+def test_invalid_valid_parent(b):
+    vp = 'testing'
+    with raises(InvalidValidParent) as exc:
+        b.parser('test', valid_parent=vp)
+    assert exc.value.args[0] is vp
+
+
+def test_valid_parent(b):
+    name = 'top'
+    b.parser(name, valid_parent=NoParent)(lambda parent, text: (parent, text))
+    p = b.parsers[name]
+    assert p(no_parent, None) == (no_parent, None)
+    assert p(no_parent, name) == (no_parent, name)
+    with raises(InvalidParent) as exc:
+        p(name, None)
+    assert exc.value.args[0] is name
+    p.valid_parent = lambda parent: parent
+    assert p(no_parent, None) == (no_parent, None)
+    with raises(InvalidParent) as exc:
+        p(0, None)
+    assert exc.value.args[0] == 0
