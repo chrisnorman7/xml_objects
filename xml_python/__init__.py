@@ -3,8 +3,10 @@ decorators."""
 
 import sys
 
-from inspect import isgenerator
+from inspect import isgenerator, isclass
 from xml.etree.ElementTree import fromstring
+
+from attr import attrs, attrib, Factory
 
 
 class NoParent:
@@ -18,23 +20,53 @@ class NoParent:
 no_parent = NoParent()
 
 
-class NoSuchParser(Exception):
+class XMLPythonException(Exception):
+    """Base exception."""
+
+
+class NoSuchParser(XMLPythonException):
     """No such parser has been defined."""
 
 
+class InvalidParent(XMLPythonException):
+    """An invalid parent was provided."""
+
+
+@attrs
+class Parser:
+    """A parser which contains a function and any valid parent."""
+
+    valid_parent = attrib()
+    func = attrib()
+
+    def __call__(self, parent, text, **kwargs):
+        """Call self.func if parent is valid."""
+        if (
+            isclass(self.valid_parent) and isinstance(
+                parent, self.valid_parent
+            )
+        ) or (
+            callable(self.valid_parent) and self.valid_parent(parent)
+        ) or self.valid_parent is None:
+            return self.func(parent, text, **kwargs)
+        raise InvalidParent(parent)
+
+
+@attrs
 class Builder:
     """Subclass to create your own builder, or juse instantiate and use the
     parser decorator."""
 
-    def __init__(self):
+    parsers = attrib(default=Factory(dict), init=False)
+
+    def __attrs_post_init__(self):
         """Set some defaults."""
-        self.parsers = {}
         for name in dir(self):
             func = getattr(self, name)
             if hasattr(func, '__parser_args__'):
                 self.parser(*func.__parser_args__)(func)
 
-    def parser(self, name):
+    def parser(self, name, valid_parent=None):
         """Decorate a function to use as a parser.
 
         The function must be prepared to take at least two arguments:
@@ -44,9 +76,13 @@ class Builder:
 
         Any non-XML text from the current node.
 
-        Any attributes of the node will be used as keyword arguments."""
+        Any attributes of the node will be used as keyword arguments.
+
+        If valid_parent is a class, then it is checked that the parent is an
+        instance of that class. If valid_parent is a function, then that
+        function will be called to determine if the parent is valid."""
         def inner(func):
-            self.parsers[name] = func
+            self.parsers[name] = Parser(valid_parent, func)
             return func
         return inner
 

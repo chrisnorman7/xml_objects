@@ -7,8 +7,8 @@ from xml_python.ext.flask import FlaskBuilder
 
 def test_init():
     b = FlaskBuilder()
-    assert b.parsers['app'] == b.get_app
-    assert b.parsers['route'] == b.get_route
+    assert b.parsers['app'].func == b.get_app
+    assert b.parsers['route'].func == b.get_route
 
 
 def test_load():

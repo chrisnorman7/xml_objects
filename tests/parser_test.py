@@ -1,6 +1,6 @@
 from pytest import raises
 
-from xml_python import Builder, NoSuchParser, no_parent
+from xml_python import Builder, NoSuchParser, no_parent, Parser
 
 xml = """<root>
 <first>%s</first>
@@ -20,7 +20,17 @@ def test_builder(b):
 
 def test_parser(b):
     b.parser('test')(print)
-    assert b.parsers == {'test': print}
+    assert len(b.parsers) == 1
+    p = b.parsers['test']
+    assert isinstance(p, Parser)
+    assert p.func is print
+    assert p.valid_parent is None
+    b.parser('foo', valid_parent=bool)(exec)
+    assert len(b.parsers) == 2
+    p = b.parsers['foo']
+    assert isinstance(p, Parser)
+    assert p.func is exec
+    assert p.valid_parent is bool
 
 
 def test_nosuchparser(b):

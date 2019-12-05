@@ -8,11 +8,11 @@ from xml_python.ext.wx import WXBuilder
 
 def test_init():
     b = WXBuilder()
-    assert b.parsers['frame'] == b.get_frame
-    assert b.parsers['sizer'] == b.get_sizer
-    assert b.parsers['input'] == b.get_control
-    assert b.parsers['label'] == b.get_label
-    assert b.parsers['event'] == b.get_event
+    assert b.parsers['frame'].func == b.get_frame
+    assert b.parsers['sizer'].func == b.get_sizer
+    assert b.parsers['input'].func == b.get_control
+    assert b.parsers['label'].func == b.get_label
+    assert b.parsers['event'].func == b.get_event
 
 
 def test_load():
