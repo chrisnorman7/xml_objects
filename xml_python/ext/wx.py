@@ -4,7 +4,7 @@ from text2code import text2code as t2c
 from wx.lib.agw.floatspin import FloatSpin
 from wx.lib.intctrl import IntCtrl
 
-from .. import Builder, no_parent, parser
+from .. import Builder, NoParent, parser
 
 
 class WXBuilder(Builder):
@@ -28,18 +28,16 @@ class WXBuilder(Builder):
             'builder': self
         }
 
-    @parser('frame')
+    @parser('frame', valid_parent=NoParent)
     def get_frame(self, parent, text, title='Untitled Frame'):
         """Return a wx.Frame instance."""
-        if parent is not no_parent:
-            raise RuntimeError('This tag must be at the top of the tree.')
         f = wx.Frame(None, name='', title=title)
         f.panel = wx.Panel(f)
         self.event_globals['panel'] = f.panel
         self.event_globals['frame'] = f
         return f
 
-    @parser('sizer')
+    @parser('sizer', valid_parent=(wx.Frame, wx.BoxSizer))
     def get_sizer(
         self, parent, text, name=None, proportion='1', orient='vertical'
     ):
@@ -64,7 +62,7 @@ class WXBuilder(Builder):
         else:
             parent.Add(s, int(proportion), wx.GROW)
 
-    @parser('input')
+    @parser('input', valid_parent=(wx.Frame, wx.BoxSizer))
     def get_control(
         self, parent, text, proportion=1, name=None, type=None, style=None,
         label=None
@@ -98,7 +96,7 @@ class WXBuilder(Builder):
         s.Add(c, int(proportion), wx.GROW)
         return c
 
-    @parser('label')
+    @parser('label', valid_parent=(wx.Frame, wx.BoxSizer))
     def get_label(
         self, parent, text, name=None, proportion='0'
     ):
@@ -127,28 +125,22 @@ class WXBuilder(Builder):
         parent.Bind(event_type, f)
         return parent  # Don't want anything untoward happening.
 
-    @parser('menubar')
+    @parser('menubar', valid_parent=wx.Frame)
     def get_menubar(self, parent, text):
         """Create a menubar."""
-        if not isinstance(parent, wx.Frame):
-            raise RuntimeError(
-                'This tag must be a child node of the frame tag.'
-            )
-        elif parent.GetMenuBar() is not None:
+        if parent.GetMenuBar() is not None:
             raise RuntimeError('That frame already has a menubar.')
         mb = wx.MenuBar()
         parent.SetMenuBar(mb)
         return mb
 
-    @parser('menu')
+    @parser('menu', valid_parent=(wx.MenuBar, wx.Menu))
     def get_menu(self, parent, text, title=None, name=None):
         """Add a menu to the main menubar, or a submenu to an existing menu."""
         if isinstance(parent, wx.MenuBar):
             f = parent.GetTopLevelParent()
-        elif isinstance(parent, wx.Menu):
-            f = parent.GetWindow()
         else:
-            raise RuntimeError('This tag must be a child of menubar, or menu.')
+            f = parent.GetWindow()
         if title is None:
             raise RuntimeError('Menus must have a title.')
         m = wx.Menu(title)
@@ -160,13 +152,11 @@ class WXBuilder(Builder):
             parent.AppendSubMenu(m, title)
         return m
 
-    @parser('menuitem')
+    @parser('menuitem', valid_parent=wx.Menu)
     def get_menuitem(
         self, parent, text, name=None, id='any', hotkey=None, help=''
     ):
         """Adds a menu item to a menu. Must be a child tag of menu."""
-        if not isinstance(parent, wx.Menu):
-            raise RuntimeError('Must be a child tag of menu.')
         if text is None:
             raise RuntimeError(
                 'This tag must contain text to be used  as the title for the '
@@ -180,20 +170,14 @@ class WXBuilder(Builder):
         i = parent.Append(id, text, help)
         return i
 
-    @parser('menuseparator')
+    @parser('menuseparator', valid_parent=wx.Menu)
     def get_menu_separator(self, parent, text):
         """Add a menu separator to a menu."""
-        if not isinstance(parent, wx.Menu):
-            raise RuntimeError('This tag must be a child of menu.')
         return parent.AppendSeparator()
 
-    @parser('menuaction')
+    @parser('menuaction', valid_parent=wx.MenuItem)
     def get_menu_action(self, parent, text):
         """Perform an action when parent is clicked."""
-        if not isinstance(parent, wx.MenuItem):
-            raise RuntimeError(
-                'This tag must be used as a child tag of menuitem.'
-            )
         d = t2c(text, __name__, **self.event_globals)
         if 'action' not in d:
             raise RuntimeError(

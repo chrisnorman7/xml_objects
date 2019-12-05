@@ -129,9 +129,9 @@ def test_valid_parent(b):
     assert p(no_parent, name) == (no_parent, name)
     with raises(InvalidParent) as exc:
         p(name, None)
-    assert exc.value.args[0] is name
+    assert exc.value.args[1] is name
     p.valid_parent = lambda parent: parent
     assert p(no_parent, None) == (no_parent, None)
     with raises(InvalidParent) as exc:
         p(0, None)
-    assert exc.value.args[0] == 0
+    assert exc.value.args[1] == 0

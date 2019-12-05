@@ -40,12 +40,13 @@ class InvalidValidParent(XMLPythonException):
 class Parser:
     """A parser which contains a function and any valid parent."""
 
+    name = attrib()
     valid_parent = attrib()
     func = attrib()
 
     def __call__(self, parent, text, **kwargs):
         """Call self.func if parent is valid."""
-        if isclass(self.valid_parent):
+        if isclass(self.valid_parent) or isinstance(self.valid_parent, tuple):
             vp = isinstance(parent, self.valid_parent)
         elif callable(self.valid_parent):
             vp = self.valid_parent(parent)
@@ -53,7 +54,7 @@ class Parser:
             vp = True
         if vp:
             return self.func(parent, text, **kwargs)
-        raise InvalidParent(parent)
+        raise InvalidParent(self, parent)
 
 
 @attrs
@@ -68,7 +69,8 @@ class Builder:
         for name in dir(self):
             func = getattr(self, name)
             if hasattr(func, '__parser_args__'):
-                self.parser(*func.__parser_args__)(func)
+                args, kwargs = func.__parser_args__
+                self.parser(*args, **kwargs)(func)
 
     def parser(self, name, valid_parent=None):
         """Decorate a function to use as a parser.
@@ -87,12 +89,12 @@ class Builder:
         function will be called to determine if the parent is valid."""
 
         def inner(func):
-            self.parsers[name] = Parser(valid_parent, func)
+            self.parsers[name] = Parser(name, valid_parent, func)
             return func
 
         if valid_parent is None or isclass(valid_parent) or callable(
             valid_parent
-        ):
+        ) or isinstance(valid_parent, tuple):
             return inner
         raise InvalidValidParent(valid_parent)
 
@@ -151,12 +153,12 @@ class Builder:
         return obj
 
 
-def parser(*args):
+def parser(*args, **kwargs):
     """Decorate an instance method to have it automatically added as a parser.
     Takes the same arguments as the Builder.parser method."""
 
     def inner(func):
-        func.__parser_args__ = args
+        func.__parser_args__ = (args, kwargs)
         return func
 
     return inner

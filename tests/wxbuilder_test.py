@@ -3,6 +3,7 @@ import os.path
 import wx
 
 from pytest import raises
+from xml_python import InvalidParent
 from xml_python.ext.wx import WXBuilder
 
 
@@ -88,5 +89,8 @@ def test_valid_frame(wxb):
 
 def test_invalid_frame(wxb):
     xml = '<frame><frame></frame></frame>'
-    with raises(RuntimeError):
+    with raises(InvalidParent) as exc:
         wxb.from_string(xml)
+    parser, parent = exc.value.args
+    assert parser is wxb.parsers['frame']
+    assert isinstance(parent, wx.Frame)
