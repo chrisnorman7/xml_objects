@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element
 from attr import Factory, attrs
 from pytest import raises
 
-from xml_objects import Builder, NoneType, UnhandledElement
+from xml_python import Builder, NoneType, UnhandledElement
 
 
 @attrs(auto_attribs=True)
