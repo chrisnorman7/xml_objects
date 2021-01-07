@@ -5,7 +5,7 @@ A library for converting XML into python objects.
 Provides the Builder class.
 """
 
-from typing import Any, IO, Callable, Dict, Generic, Optional, TypeVar
+from typing import IO, Any, Callable, Dict, Generic, List, Optional, TypeVar
 from xml.etree.ElementTree import Element, ElementTree, fromstring, parse
 
 from attr import Factory, attrib, attrs
@@ -15,7 +15,7 @@ OutputObjectType = TypeVar('OutputObjectType')
 TextType = Optional[str]
 AttribType = Dict[str, str]
 MakerType = Callable[[Optional[InputObjectType], Element], OutputObjectType]
-ParserType = Callable[[OutputObjectType, Element], OutputObjectType]
+ParserType = Callable[[OutputObjectType, Element], None]
 NoneType = type(None)
 
 
@@ -53,48 +53,46 @@ class Builder(Generic[InputObjectType, OutputObjectType]):
     parsers: Dict[str, ParserType] = attrib(default=Factory(dict), repr=False)
     builders: Dict[str, 'Builder'] = attrib(default=Factory(dict), repr=False)
 
-    def make_object(self, element: Element) -> OutputObjectType:
-        """Make an initial object for this builder to work on.
-
-        This value will not be stored anywhere on this builder, so its
-        lifecycle is completely up to the programmer.
-
-        :param element: The element to build the object from.
-        """
-        return self.maker(None, element)
-
-    def make_and_handle(self, element: Element) -> OutputObjectType:
+    def build(
+        self, input_object: Optional[InputObjectType], element: Element
+    ) -> OutputObjectType:
         """Make the initial object, then handle the element.
 
-        :param element: The element to handle."""
-        obj:
+        If you are looking to build an object from an xml element, this is
+        likely the method you want.
 
-    def handle_element(
-        self, element: Element, input_object: InputObjectType
-    ) -> OutputObjectType:
-        """Handle the given element, as well as all child elements.
+        :param input_object: An optional input object for the provided elements
+            to work on.
 
-        :param element: The parent to work on.
-
-        :param input_object: The object which has been created by any previous
-            parsers.
+        :param element: The element to handle.
         """
-        output_object: OutputObjectType
-        tag: str = element.tag
-        if tag in self.parsers:
-            output_object = self.parsers[tag](input_object, element)
-        elif tag in self.builders:
-            builder: Builder[OutputObjectType, Any] = self.builders[tag]
-            obj: Any = builder.maker(element, )
-            return builder.handle_element(
-                element, input_object
-            )
-        else:
-            raise UnhandledElement(self, element)
-        child: Element
-        for child in element:
-            self.handle_element(child, output_object)
+        output_object: OutputObjectType = self.maker(input_object, element)
+        self.handle_elements(output_object, list(element))
         return output_object
+
+    def handle_elements(
+        self, subject: OutputObjectType, elements: List[Element]
+    ) -> None:
+        """Handle each of the given elements.
+
+        This method is usually called by the :meth:`~Builder.make_and_handle`
+        method.
+
+        :param subject: The object to maniplate with the given elements.
+
+        :param elements: The elements to work through.
+        """
+        element: Element
+        for element in elements:
+            tag: str = element.tag
+            if tag in self.parsers:
+                self.parsers[tag](subject, element)
+            elif tag in self.builders:
+                builder: Builder[OutputObjectType, Any] = self.builders[tag]
+                obj: Any = builder.maker(subject, element, )
+                builder.handle_elements(obj, list(element))
+            else:
+                raise UnhandledElement(self, element)
 
     def handle_string(self, xml: str) -> OutputObjectType:
         """Parse and handle an element from a string.
@@ -102,7 +100,7 @@ class Builder(Generic[InputObjectType, OutputObjectType]):
         :param xml: The xml string to parse.
         """
         element: Element = fromstring(xml)
-        return self.handle_element(element, None)
+        return self.build(None, element)
 
     def handle_file(self, fileobj: IO[str]) -> OutputObjectType:
         """Handle a file-like object.
@@ -118,7 +116,7 @@ class Builder(Generic[InputObjectType, OutputObjectType]):
         """
         root: ElementTree = parse((filename))
         e: Element = root.getroot()
-        return self.handle_element(e, None)
+        return self.build(None, e)
 
     def parser(self, tag: str) -> Callable[[ParserType], ParserType]:
         """Add a new parser to this builder.

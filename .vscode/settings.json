@@ -5,6 +5,7 @@
         "exc",
         "fileobj",
         "ivar",
+        "obj",
         "pytest"
     ]
 }

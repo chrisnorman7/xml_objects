@@ -1,12 +1,12 @@
 """Test the Builder class."""
 
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 from xml.etree.ElementTree import Element
 
 from attr import Factory, attrs
 from pytest import raises
 
-from xml_objects import Builder, UnhandledElement
+from xml_objects import Builder, NoneType, UnhandledElement
 
 
 @attrs(auto_attribs=True)
@@ -34,47 +34,43 @@ class BaseObject:
     people: List[PretendPerson] = Factory(list)
 
 
-def get_object(parent: Optional[BaseObject], element: Element) -> BaseObject:
+def get_object(parent: NoneType, element: Element) -> BaseObject:
     """Return a BaseObject instance."""
     return BaseObject()
 
 
-def get_title(parent: Optional[BaseObject], element: Element) -> BaseObject:
+def get_title(parent: BaseObject, element: Element) -> None:
     """Add a title."""
-    assert parent is not None
     if element.text is not None:
         parent.title = element.text
-    return parent
 
 
-def get_description(
-    parent: Optional[BaseObject], element: Element
-) -> BaseObject:
+def get_description(parent: BaseObject, element: Element) -> None:
     """Set the description."""
-    assert parent is not None
     if element.text is not None:
         parent.description = element.text
-    return parent
 
 
 def test_init(b: Builder) -> None:
     """Test initialisation."""
     assert isinstance(b, Builder)
     assert b.parsers == {}
+    assert b.builders == {}
 
 
 def test_unhandled_element(b: Builder) -> None:
     """Test that unhandled elements work properly."""
+    root: Element = Element('whatever')
     e: Element = Element('test', hello='world')
+    root.append(e)
     with raises(UnhandledElement) as exc:
-        b.handle_element(e, None)
+        b.build(None, root)
     assert exc.value.args == (b, e)
 
 
 def test_handle_one_level() -> None:
     """Handle a single level of tags, with no sub builders."""
-    b: Builder[BaseObject] = Builder()
-    b.add_parser('object', get_object)
+    b: Builder[NoneType, BaseObject] = Builder(get_object)
     b.add_parser('title', get_title)
     b.add_parser('description', get_description)
     root: Element = Element('object')
@@ -83,7 +79,7 @@ def test_handle_one_level() -> None:
     description: Element = Element('description')
     description.text = 'A very nice description.'
     root.extend([title, description])
-    o: BaseObject = b.handle_element(root, None)
+    o: BaseObject = b.build(None, root)
     assert isinstance(o, BaseObject)
     assert o.title == title.text
     assert o.description == description.text
@@ -92,52 +88,50 @@ def test_handle_one_level() -> None:
 
 def test_handle_multiple_levels() -> None:
     """Handle multiple levels of children."""
-    weapon_builder: Builder[PretendPerson] = Builder(name='Weapon builder')
 
-    @weapon_builder.parser('weapon')
     def get_weapon(
         person: Optional[PretendPerson], element: Element
-    ) -> PretendPerson:
-        """Get a pretend weapon."""
-        assert person is not None
-        w: PretendWeapon = PretendWeapon()
-        person.weapon = w
-        return person
-
-    @weapon_builder.parser('type')
-    def get_type(
-        parent: Optional[PretendWeapon], element: Element
     ) -> PretendWeapon:
-        """Get a weapon type."""
-        assert parent is not None
-        if element.text is not None:
-            parent.type = element.text
-        return parent
+        """Get a pretend weapon."""
+        w: PretendWeapon = PretendWeapon()
+        if person is not None:
+            person.weapon = w
+        return w
 
-    person_builder: Builder[PretendPerson] = Builder(
-        name='Person builder', builders={'weapon': weapon_builder}
+    weapon_builder: Builder[PretendPerson, PretendWeapon] = Builder(
+        get_weapon, name='Weapon builder'
     )
 
-    @person_builder.parser('person')
+    @weapon_builder.parser('type')
+    def get_type(parent: PretendWeapon, element: Element) -> None:
+        """Get a weapon type."""
+        if element.text is not None:
+            parent.type = element.text
+
     def get_person(
-        parent: Optional[PretendPerson], element: Element
+        parent: Optional[BaseObject], element: Element
     ) -> PretendPerson:
         """Get a pretend person."""
-        return PretendPerson()
+        person: PretendPerson = PretendPerson()
+        if parent is not None:
+            parent.people.append(person)
+        return person
+
+    person_builder: Builder[BaseObject, PretendPerson] = Builder(
+        get_person, name='Person builder', builders={'weapon': weapon_builder}
+    )
 
     def get_name(
-        parent: Optional[Union[PretendPerson, PretendWeapon]], element: Element
-    ) -> Any:
+        parent: Union[PretendPerson, PretendWeapon], element: Element
+    ) -> None:
         """Get a name."""
-        if parent is not None and element.text is not None:
+        if element.text is not None:
             parent.name = element.text
-        return parent
 
     person_builder.add_parser('name', get_name)
     weapon_builder.add_parser('name', get_name)
-    object_builder: Builder[BaseObject] = Builder(
-        name='Object builder', parsers={
-            'object': get_object,
+    object_builder: Builder[NoneType, BaseObject] = Builder(
+        get_object, name='Object builder', parsers={
             'title': get_title,
             'description': get_description
         }, builders={
@@ -148,13 +142,13 @@ def test_handle_multiple_levels() -> None:
         <title>New World</title>
         <description>Something exciting.</description>
         <person>
-            <name>John</name>
+            <name>Bill</name>
             <weapon>
                 <name>Codebreaker</name>
             </weapon>
         </person>
         <person>
-            <name>Ellie</name>
+            <name>Jane</name>
             <weapon>
                 <name>Code Fixer</name>
                 <type>hammer</type>
@@ -166,3 +160,16 @@ def test_handle_multiple_levels() -> None:
     assert o.title == 'New World'
     assert o.description == 'Something exciting.'
     assert len(o.people) == 2
+    bill, jane = o.people
+    assert isinstance(bill, PretendPerson)
+    assert bill.name == 'Bill'
+    w = bill.weapon
+    assert isinstance(w, PretendWeapon)
+    assert w.name == 'Codebreaker'
+    assert w.type == 'sword'
+    assert isinstance(jane, PretendPerson)
+    assert jane.name == 'Jane'
+    w = jane.weapon
+    assert isinstance(w, PretendWeapon)
+    assert w.name == 'Code Fixer'
+    assert w.type == 'hammer'
