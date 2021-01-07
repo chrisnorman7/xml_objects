@@ -7,5 +7,6 @@
         "ivar",
         "obj",
         "pytest"
-    ]
+    ],
+    "restructuredtext.confPath": "${workspaceFolder}\\docs\\source"
 }
