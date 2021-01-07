@@ -53,7 +53,7 @@ class Builder(Generic[InputObjectType, OutputObjectType]):
     :ivar ~Builder.builders: A dictionary a sub builders, mapped to tag names.
     """
 
-    maker: MakerType
+    maker: MakerType = attrib(repr=False)
 
     name: Optional[str] = None
     parsers: Dict[str, ParserType] = attrib(default=Factory(dict), repr=False)
