@@ -10,6 +10,12 @@ from xml.etree.ElementTree import Element, ElementTree, fromstring, parse
 
 from attr import Factory, attrib, attrs
 
+__all__: List[str] = [
+    'InputObjectType', 'OutputObjectType', 'TextType', 'AttribType',
+    'MakerType', 'ParserType', 'NoneType', 'BuilderError', 'UnhandledElement',
+    'Builder'
+]
+
 InputObjectType = TypeVar('InputObjectType')
 OutputObjectType = TypeVar('OutputObjectType')
 TextType = Optional[str]
@@ -19,11 +25,11 @@ ParserType = Callable[[OutputObjectType, Element], None]
 NoneType = type(None)
 
 
-class XMLObjectsException(Exception):
+class BuilderError(Exception):
     """Base exception."""
 
 
-class UnhandledElement(XMLObjectsException):
+class UnhandledElement(BuilderError):
     """No such parser has been defined."""
 
 

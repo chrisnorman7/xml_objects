@@ -1,12 +1,20 @@
 {
     "cSpell.words": [
+        "abbrev",
         "attrib",
         "attribs",
         "exc",
         "fileobj",
+        "genindex",
         "ivar",
+        "maxdepth",
+        "modindex",
         "obj",
-        "pytest"
+        "pytest",
+        "quickstart",
+        "rst",
+        "rtd",
+        "toctree"
     ],
     "restructuredtext.confPath": "${workspaceFolder}\\docs\\source"
 }

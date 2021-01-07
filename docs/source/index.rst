@@ -6,12 +6,15 @@
 Welcome to xml_python's documentation!
 ======================================
 
+This module allows you to create Python objects from XML strings.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   api/modules.rst
+   installing
 
+   api/modules.rst
 
 Indices and tables
 ==================
