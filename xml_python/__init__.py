@@ -1,4 +1,4 @@
-"""The xml_objects library.
+"""The xml_python library.
 
 A library for converting XML into python objects.
 
